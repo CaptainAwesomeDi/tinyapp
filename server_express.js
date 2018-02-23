@@ -131,7 +131,7 @@ app.post("/login", (req, res) => {
   //   }
   // });
   //res.cookie('username', req.body.username);
-  res.send("Success");
+  //res.send("Success");
 });
 
 //POST from /logout
