@@ -5,7 +5,7 @@ allow user to shorten long Url to short Url
 
 ##Final Product
 !['Screenshot of URL Page'](https://github.com/thomas543/tinyapp/blob/master/Screen%20Shot%202018-02-23%20at%2011.43.29%20AM.png)
-!['Screenshot of Register Page']()
+!['Screenshot of Register Page'](https://github.com/thomas543/tinyapp/blob/master/Screen%20Shot%202018-02-23%20at%2011.46.24%20AM.png)
 ##Dependencies
 
 - bcrypt
