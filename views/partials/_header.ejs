@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Tiny App</title>
+</head>
+
+<body>
+  <header>
+    <h2>Welcome <%=user_id%> </h2>
+    <% if (user_id){ %>
+      <form action="/logout" method="POST">
+      <button type="submit">Logout</button>
+      </form>
+    <% } else { %>
+      <a href="/login">Login</a>
+      <a href="/register">Register</a>
+    <% } %>
+  </header>
+</body>
+
+</html>

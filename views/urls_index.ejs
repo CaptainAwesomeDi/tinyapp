@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tiny App</title>
+</head>
+<body>
+  <%-include("./partials/_header")%>
+  <ul>
+  <% for (key in urls){ %>
+    <li><%= key +' : '+ urls[key] %>
+      <form method="POST" action="/urls/<%=key%>/delete"><button> Delete 🗑</button></form>
+      <form method="GET" action="/urls/<%=key%>"><button> Edit 🔧</button></form>
+    </li>
+  <% } %>
+  </ul>
+  <a href="/urls/new">Click Here to Generate a new shortlink</a>
+</body>
+</html>
