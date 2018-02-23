@@ -1,11 +1,12 @@
+/********************************* IMPORTS *********************************/
 "use strict";
 const express = require("express");
 const app = express();
-const PORT = process.env.PORT || 8080; // default port 8080
 const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt');
 const cookieSession = require('cookie-session');
 
+//allow express to process EJS files
 app.set('view engine', 'ejs');
 
 //use middleware
@@ -15,30 +16,11 @@ app.use(cookieSession({
   keys: ['TinyApp']
 }));
 
-
+/********************************* VARIABLES *********************************/
+// default port 8080
+const PORT = process.env.PORT || 8080;
 const users = {};
-
-const generateRandomString = () => {
-  let shortUrl = "";
-  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-  for (var i = 0; i < 6; i++) { shortUrl += possible.charAt(Math.floor(Math.random() * possible.length)); }
-  return shortUrl;
-};
-
-//Find Duplicated Email
-const findduplicateEmail = (email) => {
-  for (let user in users ){
-    if (users[user].email === email){
-      return "found";
-    } else {
-      return "not found";
-    }
-  }
-};
-
-
-var urlDatabase = {
+const urlDatabase = {
   "b2xVn2": {
     shortURL: "b2xVn2",
     longURL: "http://www.lighthouselabs.ca",
@@ -51,10 +33,43 @@ var urlDatabase = {
   }
 };
 
+/********************************* FUNCTIONS *********************************/
+//generate 6 digit random string
+const generateRandomString = () => {
+  let randomString = "";
+  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+  for (var i = 0; i < 6; i++) { randomString += possible.charAt(Math.floor(Math.random() * possible.length)); }
+  return randomString;
+};
+
+//find duplicated email
+const findduplicateEmail = (email) => {
+  for (let user in users ){
+    if (users[user].email === email){
+      return "found";
+    } else {
+      return "not found";
+    }
+  }
+};
+
+/********************************* DEFAULTS *********************************/
 app.get("/", (req, res) => {
   res.end("Hello!");
 });
 
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+});
+
+app.get("/hello", (req, res) => {
+  res.end("<html><body>Hello <b>World</b></body></html>\n");
+});
+
+/********************************* LIST PAGE *********************************/
+
+//display list of urls
 app.get("/urls", (req, res) => {
   let templateVars = {
     urls: urlDatabase,
@@ -63,6 +78,21 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+// allow /urls handle POST request
+// newly generated short url added to the database
+app.post("/urls", (req, res) => {
+  let newShortURL = generateRandomString();
+  urlDatabase[newShortURL] = {
+    shortURL: newShortURL,
+    longURL: req.body.longURL,
+    userId: req.session.user_id
+  };
+  res.redirect(302, `/urls/${newShortURL}`);
+});
+
+/*************************** CREATE NEW SHORT LINK ***************************/
+
+//allow logged in user to create new short link
 app.get("/urls/new", (req, res) => {
   if (req.session.user_id) {
     let templateVars = {
@@ -75,6 +105,9 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
+/****************************** URL DETAIL PAGE ******************************/
+
+//display the newly generated shortURL with longURL with editing options
 app.get("/urls/:id", (req, res) => {
   let templateVars = {
     shortURL: req.params.id,
@@ -84,40 +117,24 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-//Update
+//allow user to change longURL without changing shortURL
 app.post("/urls/:id", (req, res) => {
   urlDatabase[req.params.id].longURL = req.body.longURL;
   res.redirect("/urls");
 });
 
 
-app.post("/urls", (req, res) => {
-  let newShortURL = generateRandomString();
-  urlDatabase[newShortURL] = {
-    shortURL: newShortURL,
-    longURL: req.body.longURL,
-    userId: req.session.user_id
-  };
-  res.redirect(302, `/urls/${newShortURL}`);
-});
-
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.end("<html><body>Hello <b>World</b></body></html>\n");
-});
 
 //redirect to a shortened URL
 app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL].longURL;
+
   if (!longURL) {
     res.redirect(404, "https://http.cat/404");
   } else {
     res.redirect(302, longURL);
   }
+
 });
 
 //Delete a link
@@ -126,12 +143,13 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-//GET from /login
+/******************************* USER FEATURE *******************************/
+//renders the login page
 app.get("/login", (req, res) => {
   res.render("urls_login");
 });
 
-//Post from /login
+//check if the user is in the database
 app.post("/login", (req, res) => {
   for (let user in users){
     if ((users[user].email === req.body.loginEmail) && (bcrypt.compareSync(req.body.loginPassword, users[user].password))){
@@ -143,7 +161,7 @@ app.post("/login", (req, res) => {
   }
 });
 
-//POST from /logout
+//when user
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect("/urls");
@@ -162,6 +180,7 @@ app.post("/register", (req, res) => {
     email: "",
     password: ""
   };
+
   if (req.body.inputEmail === "" || req.body.inputPassword === "") {
     res.status(400).send('Please fill don\'t leave email or password field empty');
   } else if (findduplicateEmail(req.body.inputEmail) === "found") {
@@ -173,11 +192,10 @@ app.post("/register", (req, res) => {
     res.redirect("/urls");
   }
 
-
 });
 
 
-//Create a server
+/******************************* CREATE SERVER *******************************/
 app.listen(PORT, () => {
   console.log(`TinyURL app listening on port ${PORT}!`);
 });
