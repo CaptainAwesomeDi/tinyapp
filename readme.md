@@ -14,6 +14,7 @@ allow user to shorten long Url to short Url
 - cookie-session
 - ejs
 - express
+- method-override
 
 ## Getting Started
 1. Install all dependencies (using `npm install` command).

@@ -11,7 +11,7 @@
     <% for (key in urls){ %>
       <% if (user_id === urls[key].userId) { %>
       <li><%= key +' : '+ urls[key].longURL %>
-        <form method="POST" action="/urls/<%=key%>/delete"><button> Delete 🗑</button></form>
+        <form method="POST" action="/urls/<%=key%>/delete?_method=DELETE"><button> Delete 🗑</button></form>
         <form method="GET" action="/urls/<%=key%>"><button> Edit 🔧</button></form>
       <% } %>
       </li>

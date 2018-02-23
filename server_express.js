@@ -5,6 +5,7 @@ const app = express();
 const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt');
 const cookieSession = require('cookie-session');
+const methodOverride = require('method-override');
 
 //allow express to process EJS files
 app.set('view engine', 'ejs');
@@ -15,6 +16,7 @@ app.use(cookieSession({
   name: 'session',
   keys: ['TinyApp']
 }));
+app.use(methodOverride('_method'));
 
 /********************************* VARIABLES *********************************/
 // default port 8080
@@ -118,7 +120,8 @@ app.get("/urls/:id", (req, res) => {
 });
 
 //allow user to change longURL without changing shortURL
-app.post("/urls/:id", (req, res) => {
+app.put("/urls/:id", (req, res) => {
+  console.log(req.param.id);
   urlDatabase[req.params.id].longURL = req.body.longURL;
   res.redirect("/urls");
 });
@@ -138,7 +141,7 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 //Delete a link
-app.post("/urls/:shortURL/delete", (req, res) => {
+app.delete("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect("/urls");
 });

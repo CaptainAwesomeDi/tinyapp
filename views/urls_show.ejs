@@ -6,7 +6,7 @@
 </head>
 <body>
   <header><%-include("./partials/_header")%></header>
-  <form action="/urls/<%=shortURL%>" method="POST">
+  <form action="/urls/<%=shortURL%>?_method=PUT" method="POST">
     <label for ="longURL">Short URL: <%=shortURL%></label>
     <input id="longURL" type="text" name="longURL" value="<%=urls[shortURL].longURL%>">
     <button type="submit">Update</button>
