@@ -117,7 +117,7 @@ app.post("/login", (req, res) => {
   console.log('loginpassword',req.body.loginPassword);
   for (let user in users){
     if ((users[user].email === req.body.loginEmail) && (users[user].password === req.body.loginPassword)){
-        res.cookie('user_id',users[user].id);
+        res.cookie('user_id',users[user].email);
         res.redirect('/urls');
       }else {
         res.status(400).send('incorrect username or password!');
@@ -164,7 +164,7 @@ app.post("/register", (req, res) => {
   } else {
     users[userid].email = req.body.inputEmail;
     users[userid].password = req.body.inputPassword;
-    res.cookie("user_id", userid);
+    res.cookie("user_id", users[userid].email);
     console.log(users);
     res.redirect("/urls");
   }
