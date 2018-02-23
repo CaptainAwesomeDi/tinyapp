@@ -3,14 +3,19 @@ const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 8080; // default port 8080
 const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser");
+//const cookieParser = require("cookie-parser");
 const bcrypt = require('bcrypt');
+const cookieSession = require('cookie-session');
 
 app.set('view engine', 'ejs');
 
 //use middleware
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+//app.use(cookieParser());
+app.use(cookieSession({
+    name:'session',
+    keys:['TinyApp']
+}));
 
 
 const users = {};
@@ -45,16 +50,18 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   let templateVars = {
     urls: urlDatabase,
-    user_id: req.cookies["user_id"]
+    //user_id: req.cookies["user_id"]
+    user_id:req.session.user_id
   };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  if (req.cookies["user_id"]) {
+  if (req.session.user_id) {
   let templateVars = {
     urls: urlDatabase,
-    user_id: req.cookies["user_id"]
+    user_id:req.session.user_id
+    //user_id: req.cookies["user_id"]
   };
   res.render("urls_new", templateVars);
 } else {
@@ -66,7 +73,8 @@ app.get("/urls/:id", (req, res) => {
   let templateVars = {
     shortURL: req.params.id,
     urls: urlDatabase,
-    user_id: req.cookies["user_id"]
+    //user_id: req.cookies["user_id"]
+    user_id:req.session.user_id
   };
   res.render("urls_show", templateVars);
 });
@@ -83,7 +91,8 @@ app.post("/urls", (req, res) => {
   urlDatabase[newShortURL] ={
     shortURL:newShortURL,
     longURL:req.body.longURL,
-    userId:req.cookies["user_id"]
+    //userId:req.cookies["user_id"]
+    userId:req.session.user_id
   }
   console.log(urlDatabase);
   res.redirect(302, `/urls/${newShortURL}`);
@@ -123,7 +132,8 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   for (let user in users){
     if ((users[user].email === req.body.loginEmail) && (bcrypt.compareSync(req.body.loginPassword,users[user].password))){
-        res.cookie('user_id',users[user].email);
+        //res.cookie('user_id',users[user].id);
+        req.session.user_id = users[user].id;
         res.redirect('/urls');
       }else {
         res.status(400).send('incorrect Email or Password!');
@@ -133,7 +143,7 @@ app.post("/login", (req, res) => {
 
 //POST from /logout
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect("/urls");
 });
 
@@ -150,6 +160,7 @@ app.post("/register", (req, res) => {
     email: "",
     password: ""
   };
+  console.log(users[userid].id);
   if (req.body.inputEmail === "" || req.body.inputPassword === "") {
     res.status(400).send('Please fill don\'t leave email or password field empty');
   } else if (findduplicateEmail(req.body.inputEmail)==="found") {
@@ -157,7 +168,8 @@ app.post("/register", (req, res) => {
   } else {
     users[userid].email = req.body.inputEmail;
     users[userid].password = bcrypt.hashSync(req.body.inputPassword,10);
-    res.cookie("user_id", users[userid].id);
+    //res.cookie("user_id", users[userid].id);
+    req.session.user_id = users[userid].id;
     console.log(users);
     res.redirect("/urls");
   }
@@ -168,7 +180,7 @@ app.post("/register", (req, res) => {
 
 //Create a server
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`TinyURL app listening on port ${PORT}!`);
 });
 
 //Find Duplicated Email
