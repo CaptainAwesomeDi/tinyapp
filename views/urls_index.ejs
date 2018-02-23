@@ -6,14 +6,21 @@
 </head>
 <body>
   <%-include("./partials/_header")%>
+  <% if (user_id) { %>
   <ul>
-  <% for (key in urls){ %>
-    <li><%= key +' : '+ urls[key] %>
-      <form method="POST" action="/urls/<%=key%>/delete"><button> Delete 🗑</button></form>
-      <form method="GET" action="/urls/<%=key%>"><button> Edit 🔧</button></form>
-    </li>
-  <% } %>
+    <% for (key in urls){ %>
+      <% if (user_id === urls[key].userId) { %>
+      <li><%= key +' : '+ urls[key].longURL %>
+        <form method="POST" action="/urls/<%=key%>/delete"><button> Delete 🗑</button></form>
+        <form method="GET" action="/urls/<%=key%>"><button> Edit 🔧</button></form>
+      <% } %>
+      </li>
+    <% } %>
   </ul>
+  <% } else { %>
+    <h2>Please Login or Register first!</h2>
+  <% } %>
+
   <a href="/urls/new">Click Here to Generate a new shortlink</a>
 </body>
 </html>

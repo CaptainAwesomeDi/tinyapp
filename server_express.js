@@ -9,16 +9,8 @@ const bcrypt = require('bcrypt');
 app.set('view engine', 'ejs');
 
 //use middleware
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
-
-// How do I utlize middleware to pass same info
-// app.use((req, res, next) => {
-//   res.locals.user_id = req.cookies["user_id"]
-//   next();
-// });
 
 
 const users = {};
@@ -34,8 +26,16 @@ const generateRandomString = () => {
 
 
 var urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    shortURL:"b2xVn2",
+    longURL:"http://www.lighthouselabs.ca",
+    userId:"1"
+  },
+  "9sm5xK": {
+    shortURL:"9sm5xK",
+    longURL:"http://www.google.com",
+    userId:"1"
+  }
 };
 
 app.get("/", (req, res) => {
@@ -51,11 +51,15 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
+  if (req.cookies["user_id"]) {
   let templateVars = {
     urls: urlDatabase,
     user_id: req.cookies["user_id"]
   };
   res.render("urls_new", templateVars);
+} else {
+  res.redirect("/login");
+}
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -69,16 +73,20 @@ app.get("/urls/:id", (req, res) => {
 
 //Update
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.longURL;
+  urlDatabase[req.params.id].longURL = req.body.longURL;
   res.redirect("/urls");
 });
 
 
 app.post("/urls", (req, res) => {
   let newShortURL = generateRandomString();
-  urlDatabase[newShortURL] = req.body.longURL;
+  urlDatabase[newShortURL] ={
+    shortURL:newShortURL,
+    longURL:req.body.longURL,
+    userId:req.cookies["user_id"]
+  }
+  console.log(urlDatabase);
   res.redirect(302, `/urls/${newShortURL}`);
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
 });
 
 
@@ -92,7 +100,7 @@ app.get("/hello", (req, res) => {
 
 //redirect to a shortened URL
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL];
+  let longURL = urlDatabase[req.params.shortURL].longURL;
   if (!longURL) {
     res.redirect(404, "https://http.cat/404");
   } else {
@@ -109,38 +117,23 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 //GET from /login
 app.get("/login", (req, res) => {
   res.render("urls_login")
-  //console.log('Cookies:' + req.cookies["user_id"]);
 });
+
 //Post from /login
 app.post("/login", (req, res) => {
-  console.log('loginemail',req.body.loginEmail);
-  console.log('loginpassword',req.body.loginPassword);
   for (let user in users){
-    if ((users[user].email === req.body.loginEmail) && (users[user].password === req.body.loginPassword)){
+    if ((users[user].email === req.body.loginEmail) && (bcrypt.compareSync(req.body.loginPassword,users[user].password))){
         res.cookie('user_id',users[user].email);
         res.redirect('/urls');
       }else {
-        res.status(400).send('incorrect username or password!');
+        res.status(400).send('incorrect Email or Password!');
       }
   }
-  // users.forEach((user)=>{
-  //   if ((user.email === req.body.loginEmail) && (user.password === req.body.loginPassword)){
-  //     res.cookie('user_id',userid)
-  //   }else {
-  //     res.status(400).send('incorrect username or password!');
-  //   }
-  // });
-  //res.cookie('username', req.body.username);
-  //res.send("Success");
 });
 
 //POST from /logout
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id');
-  res.clearCookie('username');
-  res.clearCookie('Email');
-  res.clearCookie('Password');
-  res.clearCookie('userId');
   res.redirect("/urls");
 });
 
@@ -163,8 +156,8 @@ app.post("/register", (req, res) => {
     res.status(400).send('This Email is already in use, please use another email')
   } else {
     users[userid].email = req.body.inputEmail;
-    users[userid].password = req.body.inputPassword;
-    res.cookie("user_id", users[userid].email);
+    users[userid].password = bcrypt.hashSync(req.body.inputPassword,10);
+    res.cookie("user_id", users[userid].id);
     console.log(users);
     res.redirect("/urls");
   }
@@ -178,9 +171,9 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+//Find Duplicated Email
 const findduplicateEmail = (email) => {
   for (let user in users ){
-    console.log(users[user].email);
     if (users[user].email === email){
       return "found";
     } else {
