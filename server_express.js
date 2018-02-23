@@ -3,7 +3,6 @@ const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 8080; // default port 8080
 const bodyParser = require("body-parser");
-//const cookieParser = require("cookie-parser");
 const bcrypt = require('bcrypt');
 const cookieSession = require('cookie-session');
 
@@ -11,10 +10,9 @@ app.set('view engine', 'ejs');
 
 //use middleware
 app.use(bodyParser.urlencoded({extended: true}));
-//app.use(cookieParser());
 app.use(cookieSession({
-    name:'session',
-    keys:['TinyApp']
+  name: 'session',
+  keys: ['TinyApp']
 }));
 
 
@@ -24,22 +22,32 @@ const generateRandomString = () => {
   let shortUrl = "";
   const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-  for (var i = 0; i < 6; i++)
-    shortUrl += possible.charAt(Math.floor(Math.random() * possible.length));
+  for (var i = 0; i < 6; i++) { shortUrl += possible.charAt(Math.floor(Math.random() * possible.length)); }
   return shortUrl;
-}
+};
+
+//Find Duplicated Email
+const findduplicateEmail = (email) => {
+  for (let user in users ){
+    if (users[user].email === email){
+      return "found";
+    } else {
+      return "not found";
+    }
+  }
+};
 
 
 var urlDatabase = {
   "b2xVn2": {
-    shortURL:"b2xVn2",
-    longURL:"http://www.lighthouselabs.ca",
-    userId:"1"
+    shortURL: "b2xVn2",
+    longURL: "http://www.lighthouselabs.ca",
+    userId: "1"
   },
   "9sm5xK": {
-    shortURL:"9sm5xK",
-    longURL:"http://www.google.com",
-    userId:"1"
+    shortURL: "9sm5xK",
+    longURL: "http://www.google.com",
+    userId: "1"
   }
 };
 
@@ -50,31 +58,28 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   let templateVars = {
     urls: urlDatabase,
-    //user_id: req.cookies["user_id"]
-    user_id:req.session.user_id
+    user_id: req.session.user_id
   };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
   if (req.session.user_id) {
-  let templateVars = {
-    urls: urlDatabase,
-    user_id:req.session.user_id
-    //user_id: req.cookies["user_id"]
-  };
-  res.render("urls_new", templateVars);
-} else {
-  res.redirect("/login");
-}
+    let templateVars = {
+      urls: urlDatabase,
+      user_id: req.session.user_id
+    };
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/urls/:id", (req, res) => {
   let templateVars = {
     shortURL: req.params.id,
     urls: urlDatabase,
-    //user_id: req.cookies["user_id"]
-    user_id:req.session.user_id
+    user_id: req.session.user_id
   };
   res.render("urls_show", templateVars);
 });
@@ -88,13 +93,11 @@ app.post("/urls/:id", (req, res) => {
 
 app.post("/urls", (req, res) => {
   let newShortURL = generateRandomString();
-  urlDatabase[newShortURL] ={
-    shortURL:newShortURL,
-    longURL:req.body.longURL,
-    //userId:req.cookies["user_id"]
-    userId:req.session.user_id
-  }
-  console.log(urlDatabase);
+  urlDatabase[newShortURL] = {
+    shortURL: newShortURL,
+    longURL: req.body.longURL,
+    userId: req.session.user_id
+  };
   res.redirect(302, `/urls/${newShortURL}`);
 });
 
@@ -125,19 +128,18 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 //GET from /login
 app.get("/login", (req, res) => {
-  res.render("urls_login")
+  res.render("urls_login");
 });
 
 //Post from /login
 app.post("/login", (req, res) => {
   for (let user in users){
-    if ((users[user].email === req.body.loginEmail) && (bcrypt.compareSync(req.body.loginPassword,users[user].password))){
-        //res.cookie('user_id',users[user].id);
-        req.session.user_id = users[user].id;
-        res.redirect('/urls');
-      }else {
-        res.status(400).send('incorrect Email or Password!');
-      }
+    if ((users[user].email === req.body.loginEmail) && (bcrypt.compareSync(req.body.loginPassword, users[user].password))){
+      req.session.user_id = users[user].id;
+      res.redirect('/urls');
+    }else {
+      res.status(400).send('incorrect Email or Password!');
+    }
   }
 });
 
@@ -160,17 +162,14 @@ app.post("/register", (req, res) => {
     email: "",
     password: ""
   };
-  console.log(users[userid].id);
   if (req.body.inputEmail === "" || req.body.inputPassword === "") {
     res.status(400).send('Please fill don\'t leave email or password field empty');
-  } else if (findduplicateEmail(req.body.inputEmail)==="found") {
-    res.status(400).send('This Email is already in use, please use another email')
+  } else if (findduplicateEmail(req.body.inputEmail) === "found") {
+    res.status(400).send('This Email is already in use, please use another email');
   } else {
     users[userid].email = req.body.inputEmail;
-    users[userid].password = bcrypt.hashSync(req.body.inputPassword,10);
-    //res.cookie("user_id", users[userid].id);
+    users[userid].password = bcrypt.hashSync(req.body.inputPassword, 10);
     req.session.user_id = users[userid].id;
-    console.log(users);
     res.redirect("/urls");
   }
 
@@ -182,14 +181,3 @@ app.post("/register", (req, res) => {
 app.listen(PORT, () => {
   console.log(`TinyURL app listening on port ${PORT}!`);
 });
-
-//Find Duplicated Email
-const findduplicateEmail = (email) => {
-  for (let user in users ){
-    if (users[user].email === email){
-      return "found";
-    } else {
-      return "not found";
-    }
-  }
-}
