@@ -11,5 +11,10 @@
     <input id="longURL" type="text" name="longURL" value="<%=urls[shortURL].longURL%>">
     <button type="submit">Update</button>
   </form>
+  <h2>Times used shortURL:
+    <% if (urls[shortURL].visited === undefined){ %>
+      <% urls[shortURL].visited = 0; %>
+    <% } %>
+    <%= urls[shortURL].visited %></h2>
 </body>
 </html>

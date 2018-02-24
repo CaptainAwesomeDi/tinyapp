@@ -73,9 +73,11 @@ app.get("/hello", (req, res) => {
 
 //display list of urls
 app.get("/urls", (req, res) => {
+  console.log(urlDatabase);
   let templateVars = {
     urls: urlDatabase,
-    user_id: req.session.user_id
+    user_id: req.session.user_id,
+    visited: req.session.visited
   };
   res.render("urls_index", templateVars);
 });
@@ -87,7 +89,8 @@ app.post("/urls", (req, res) => {
   urlDatabase[newShortURL] = {
     shortURL: newShortURL,
     longURL: req.body.longURL,
-    userId: req.session.user_id
+    userId: req.session.user_id,
+    visited:req.session.visited
   };
   res.redirect(302, `/urls/${newShortURL}`);
 });
@@ -114,14 +117,14 @@ app.get("/urls/:id", (req, res) => {
   let templateVars = {
     shortURL: req.params.id,
     urls: urlDatabase,
-    user_id: req.session.user_id
+    user_id: req.session.user_id,
+    visited: req.session.visted
   };
   res.render("urls_show", templateVars);
 });
 
 //allow user to change longURL without changing shortURL
 app.put("/urls/:id", (req, res) => {
-  console.log(req.param.id);
   urlDatabase[req.params.id].longURL = req.body.longURL;
   res.redirect("/urls");
 });
@@ -131,7 +134,11 @@ app.put("/urls/:id", (req, res) => {
 //redirect to a shortened URL
 app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL].longURL;
-
+  if(urlDatabase[req.params.shortURL].visited === undefined){
+    urlDatabase[req.params.shortURL].visited = 1;
+  } else {
+    urlDatabase[req.params.shortURL].visited += 1;
+  }
   if (!longURL) {
     res.redirect(404, "https://http.cat/404");
   } else {
