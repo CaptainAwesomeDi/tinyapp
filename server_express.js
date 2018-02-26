@@ -11,7 +11,7 @@ const methodOverride = require('method-override');
 app.set('view engine', 'ejs');
 
 //use middleware
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: 'session',
   keys: ['TinyApp']
@@ -47,8 +47,8 @@ const generateRandomString = () => {
 
 //find duplicated email
 const findduplicateEmail = (email) => {
-  for (let user in users ){
-    if (users[user].email === email){
+  for (let user in users) {
+    if (users[user].email === email) {
       return "found";
     } else {
       return "not found";
@@ -90,7 +90,7 @@ app.post("/urls", (req, res) => {
     shortURL: newShortURL,
     longURL: req.body.longURL,
     userId: req.session.user_id,
-    visited:req.session.visited
+    visited: req.session.visited
   };
   res.redirect(302, `/urls/${newShortURL}`);
 });
@@ -114,12 +114,22 @@ app.get("/urls/new", (req, res) => {
 
 //display the newly generated shortURL with longURL with editing options
 app.get("/urls/:id", (req, res) => {
+  if (req.sesion.uniqueVisited === undefined) {
+    req.sesion.uniqueVisited = 1;
+  }
   let templateVars = {
     shortURL: req.params.id,
     urls: urlDatabase,
     user_id: req.session.user_id,
-    visited: req.session.visted
+    visited: req.session.visited,
+    uniqueVisited: req.sesion.uniqueVisited,
+    visitorlist: []
   };
+  for (let visitor of templateVars.visitorlist) {
+    if (visitor !== req.session.userid) {
+      templateVars.visitorlist.push(req.session.user_id);
+    }
+  }
   res.render("urls_show", templateVars);
 });
 
@@ -134,7 +144,7 @@ app.put("/urls/:id", (req, res) => {
 //redirect to a shortened URL
 app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL].longURL;
-  if(urlDatabase[req.params.shortURL].visited === undefined){
+  if (urlDatabase[req.params.shortURL].visited === undefined) {
     urlDatabase[req.params.shortURL].visited = 1;
   } else {
     urlDatabase[req.params.shortURL].visited += 1;
@@ -161,11 +171,11 @@ app.get("/login", (req, res) => {
 
 //check if the user is in the database
 app.post("/login", (req, res) => {
-  for (let user in users){
-    if ((users[user].email === req.body.loginEmail) && (bcrypt.compareSync(req.body.loginPassword, users[user].password))){
+  for (let user in users) {
+    if ((users[user].email === req.body.loginEmail) && (bcrypt.compareSync(req.body.loginPassword, users[user].password))) {
       req.session.user_id = users[user].id;
       res.redirect('/urls');
-    }else {
+    } else {
       res.status(400).send('incorrect Email or Password!');
     }
   }
