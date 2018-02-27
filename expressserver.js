@@ -39,14 +39,16 @@ const generateRandomString = () => {
   let randomString = "";
   const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-  for (var i = 0; i < 6; i++) { randomString += possible.charAt(Math.floor(Math.random() * possible.length)); }
+  for (var i = 0; i < 6; i++) {
+    randomString += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
   return randomString;
 };
 
 //find duplicated email
 const findduplicateEmail = (email) => {
-  for (let user in users ){
-    if (users[user].email === email){
+  for (let user in users) {
+    if (users[user].email === email) {
       return "found";
     } else {
       return "not found";
@@ -75,7 +77,7 @@ app.get("/urls", (req, res) => {
     urls: urlDatabase,
     user_id: req.session.user_id
   };
-    res.render("urls_index", templateVars);
+  res.render("urls_index", templateVars);
 });
 
 // allow /urls handle POST request
@@ -114,11 +116,11 @@ app.get("/urls/:id", (req, res) => {
     urls: urlDatabase,
     user_id: req.session.user_id
   };
-  if (!templateVars.user_id){
+  if (!templateVars.user_id) {
     res.redirect("/login");
-  } else{
-  res.render("urls_show", templateVars);
-}
+  } else {
+    res.render("urls_show", templateVars);
+  }
 });
 
 //allow user to change longURL without changing shortURL
@@ -155,11 +157,11 @@ app.get("/login", (req, res) => {
 
 //check if the user is in the database
 app.post("/login", (req, res) => {
-  for (let user in users){
-    if ((users[user].email === req.body.loginEmail) && (bcrypt.compareSync(req.body.loginPassword, users[user].password))){
+  for (let user in users) {
+    if ((users[user].email === req.body.loginEmail) && (bcrypt.compareSync(req.body.loginPassword, users[user].password))) {
       req.session.user_id = users[user].id;
       res.redirect('/urls');
-    }else {
+    } else {
       res.status(400).send('incorrect Email or Password!');
     }
   }
